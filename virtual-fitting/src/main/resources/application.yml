@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost/virtualfitting"
+    username: "root"
+    password: "0302"
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
