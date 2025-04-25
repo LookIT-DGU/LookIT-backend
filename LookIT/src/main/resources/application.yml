@@ -11,3 +11,8 @@ spring:
         show_sql: true
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
+
+  kakao:
+    client_id: c428d183a4f8baec69e1b15e29ed5f4d
+    base_url: https://dapi.kakao.com
+    redirect_uri: http://localhost:8080/api/auth/login/kakao
