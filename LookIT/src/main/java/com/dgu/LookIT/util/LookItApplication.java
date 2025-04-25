@@ -1,13 +1,13 @@
-package com.dongguk.virtual_fitting;
+package com.dgu.LookIT.util;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class VirtualFittingApplication {
+public class LookItApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(VirtualFittingApplication.class, args);
+		SpringApplication.run(LookItApplication.class, args);
 	}
 
 }
