@@ -1,4 +1,4 @@
-package com.dgu.LookIT.util;
+package com.dgu.LookIT;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
