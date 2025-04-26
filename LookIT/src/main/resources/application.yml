@@ -16,3 +16,7 @@ spring:
     client_id: 8bf791a8ad271ac1a21d486646375e9e
     base_url: https://dapi.kakao.com
     redirect_uri: http://localhost:8080/callback
+
+logging:
+  level:
+    io.netty: DEBUG
