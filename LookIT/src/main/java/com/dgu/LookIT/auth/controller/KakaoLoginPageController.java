@@ -1,5 +1,6 @@
 package com.dgu.LookIT.auth.controller;
 
+import com.dgu.LookIT.global.ResponseDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,8 +27,4 @@ public class KakaoLoginPageController {
 
         return "login";
     }
-
-//    public ResponseEntity<?> callback(@RequestParam("code") String code) {
-//        return new ResponseEntity<>(HttpStatus.OK);
-//    }
 }
