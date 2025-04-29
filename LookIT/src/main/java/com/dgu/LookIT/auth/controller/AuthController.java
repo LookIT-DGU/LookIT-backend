@@ -39,4 +39,9 @@ public class AuthController {
     public ResponseDto<?> signUp(@UserId Long userId, @RequestBody SignUpRequest signUpRequest) {
         return ResponseDto.created(authService.signUp(userId, signUpRequest));
     }
+
+//    @GetMapping("/api/test")
+//    public Long test(@UserId Long userId) {
+//        return userId;
+//    }
 }
