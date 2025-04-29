@@ -20,3 +20,8 @@ spring:
 logging:
   level:
     io.netty: DEBUG
+
+jwt:
+  secret-key: vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaa
+  access-token-expire-period: 36000000
+  refresh-token-expire-period: 3600
