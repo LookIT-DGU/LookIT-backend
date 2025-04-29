@@ -25,14 +25,14 @@ public class User {
     @Column(name = "serial_id")
     private Long serialId;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = true, length = 100)
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Gender gender;
 
-    @Column(name = "birth_date", nullable = false)
+    @Column(name = "birth_date", nullable = true)
     private LocalDate birthDate;
 
     @Column(name = "user_image", columnDefinition = "TEXT")

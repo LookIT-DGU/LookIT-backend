@@ -15,13 +15,13 @@ spring:
   kakao:
     client_id: 8bf791a8ad271ac1a21d486646375e9e
     base_url: https://dapi.kakao.com
-    redirect_uri: http://localhost:8080/callback
+    redirect_uri: http://localhost:8080/api/auth/login/kakao
 
 logging:
   level:
     io.netty: DEBUG
 
 jwt:
-  secret-key: vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaa
+  secret-key: vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaasdsakdkaewrkjkjareaserjaskjldjaklsdjklsaj
   access-token-expire-period: 36000000
   refresh-token-expire-period: 3600
