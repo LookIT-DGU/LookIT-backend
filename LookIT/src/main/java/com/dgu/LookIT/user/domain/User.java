@@ -35,8 +35,8 @@ public class User {
     @Column(name = "birth_date", nullable = true)
     private LocalDate birthDate;
 
-    @Column(name = "user_image", columnDefinition = "TEXT")
-    private String userImage;
+    @Column(name = "body_image", columnDefinition = "TEXT")
+    private String bodyImage;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -84,13 +84,13 @@ public class User {
         this.name = request.name();
         this.gender = request.gender();
         this.birthDate = request.birthday();
-        this.userImage = request.image();
+        this.bodyImage = request.image();
     }
 
     public void signUpUser(SignUpRequest request) {
         this.name = request.name();
         this.gender = request.gender();
         this.birthDate = request.birthday();
-        this.userImage = request.image();
+        this.bodyImage = request.image();
     }
 }
