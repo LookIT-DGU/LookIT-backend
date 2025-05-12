@@ -19,11 +19,12 @@ public class BrandController {
     public ResponseEntity<Brand> createBrand(@RequestBody BrandDto dto) {
         Brand saved = brandService.saveBrand(dto);
         return ResponseEntity.ok(saved);
-
     }
     @GetMapping
-    public ResponseEntity<List<Brand>> getAllBrands() {
-        List<Brand> brands = brandService.getAllBrands();
-        return ResponseEntity.ok(brands);
+    public ResponseEntity<List<Brand>> getBrands(@RequestParam(required = false) List<String> tags) {
+        if (tags == null || tags.isEmpty()) {
+            return ResponseEntity.ok(brandService.getAllBrands());
+        }
+        return ResponseEntity.ok(brandService.getBrandsByTags(tags));
     }
 }

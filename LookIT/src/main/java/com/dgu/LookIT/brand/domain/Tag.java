@@ -1,5 +1,6 @@
 package com.dgu.LookIT.brand.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,5 +24,7 @@ public class Tag {
     private String name;
 
     @ManyToMany(mappedBy = "tags")
+    @JsonBackReference
     private Set<Brand> brands = new HashSet<>();
+
 }
