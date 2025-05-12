@@ -10,7 +10,8 @@ public class AuthConstant {
             "/static/**",
             "/login/page",
             "/api/auth/login/kakao/**",
-            "/api/auth/login/kakao",
+            "/api/auth/login/kakao"
+          //  "/api/v0/brands/**"
     };
     private AuthConstant() {
     }

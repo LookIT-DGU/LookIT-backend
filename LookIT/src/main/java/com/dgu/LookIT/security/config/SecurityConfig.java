@@ -36,6 +36,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(registry ->
                         registry
+                             //   .requestMatchers("/api/v0/brands").permitAll()
                                 .requestMatchers(AuthConstant.AUTH_WHITELIST).permitAll()
                                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                                 .anyRequest().authenticated()
