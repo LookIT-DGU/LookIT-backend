@@ -1,4 +1,4 @@
-package com.dgu.LookIT.config;
+package com.dgu.LookIT.fitting.config;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
