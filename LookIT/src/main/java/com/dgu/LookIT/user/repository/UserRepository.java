@@ -1,5 +1,6 @@
 package com.dgu.LookIT.user.repository;
 
+import com.dgu.LookIT.fitting.domain.StyleAnalysis;
 import com.dgu.LookIT.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
