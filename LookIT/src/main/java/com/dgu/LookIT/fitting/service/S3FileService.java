@@ -73,5 +73,4 @@ public class S3FileService {
                 .block(); // 동기 방식으로 결과 대기
     }
 
-
 }
