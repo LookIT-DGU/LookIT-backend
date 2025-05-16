@@ -2,7 +2,7 @@ package com.dgu.LookIT.fitting.service;
 
 import com.dgu.LookIT.exception.CommonException;
 import com.dgu.LookIT.exception.ErrorCode;
-import com.dgu.LookIT.fitting.domain.BodyType;
+import com.dgu.LookIT.fitting.domain.BodyAnalysis;
 import com.dgu.LookIT.fitting.domain.FaceShape;
 import com.dgu.LookIT.fitting.domain.StyleAnalysis;
 import com.dgu.LookIT.fitting.repository.StyleAnalysisRepository;
@@ -88,9 +88,9 @@ public class AnalysisService {
             throw new CommonException(ErrorCode.AI_SERVER_ERROR); // AI 서버 통신 실패 시
         }
 
-        BodyType bodyType;
+        BodyAnalysis bodyAnalysis;
         try {
-            bodyType = BodyType.valueOf(bodyShapeStr.toUpperCase());
+            bodyAnalysis = BodyAnalysis.valueOf(bodyShapeStr.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new CommonException(ErrorCode.INVALID_BODY_TYPE);
         }
@@ -103,10 +103,10 @@ public class AnalysisService {
                     return new StyleAnalysis(userId);
                 });
 
-        analysis.setBodyType(bodyType);
+        analysis.setBodyAnalysis(bodyAnalysis);
         analysis.setAnalysisDate(LocalDateTime.now());
         styleAnalysisRepository.save(analysis);
 
-        return bodyType.name();
+        return bodyAnalysis.name();
     }
 }

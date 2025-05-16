@@ -23,6 +23,10 @@ public class StyleAnalysis {
     private Long userId;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "body_Analysis")
+    private BodyAnalysis bodyAnalysis;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "body_type")
     private BodyType bodyType;
 
