@@ -8,105 +8,134 @@ import com.dgu.LookIT.fitting.domain.StyleAnalysis;
 import com.dgu.LookIT.fitting.repository.StyleAnalysisRepository;
 import com.dgu.LookIT.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class AnalysisService {
     private final UserRepository userRepository;
     private final StyleAnalysisRepository styleAnalysisRepository;
+    private final StringRedisTemplate redisTemplate;
 
     private final WebClient webClient = WebClient.builder()
-            .baseUrl("http://ai-server.com") // ← 실제 AI 서버 주소로 바꾸세요
+            .baseUrl("http://ai-server.com")
             .build();
 
-
-    public String faceAnalysis(Long userId, MultipartFile faceImage) throws IOException {
-        MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        builder.part("faceImageUrl", faceImage.getResource())
-                .filename(faceImage.getOriginalFilename())
-                .contentType(MediaType.IMAGE_PNG);
-
-        String faceShapeStr;
-        try {
-            faceShapeStr = webClient.post()
-                    .uri("http://ai-server.com/face-analysis")
-                    .contentType(MediaType.MULTIPART_FORM_DATA)
-                    .bodyValue(builder.build())
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-        } catch (Exception e) {
-            throw new CommonException(ErrorCode.AI_SERVER_ERROR); // AI 서버 통신 실패 시
-        }
-
-        FaceShape faceShape;
-        try {
-            faceShape = FaceShape.valueOf(faceShapeStr.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new CommonException(ErrorCode.INVALID_FACE_SHAPE);
-        }
-
-        StyleAnalysis analysis = styleAnalysisRepository.findByUserId(userId)
-                .orElseGet(() -> {
-                    if (!userRepository.existsById(userId)) {
-                        throw new CommonException(ErrorCode.NOT_FOUND_USER);
-                    }
-                    return new StyleAnalysis(userId);
-                });
-
-        analysis.setFaceShape(faceShape);
-        analysis.setAnalysisDate(LocalDateTime.now());
-        styleAnalysisRepository.save(analysis);
-
-        return faceShape.name();
+    public String requestFaceAnalysis(Long userId, MultipartFile faceImage) throws IOException {
+        String taskId = UUID.randomUUID().toString();
+        processFaceAnalysisAsync(taskId, userId, faceImage);
+        return taskId; // 클라이언트는 taskId로 결과를 나중에 조회
     }
 
-    public String bodyAnalysis(Long userId, MultipartFile bodyImage) throws IOException {
-        MultipartBodyBuilder builder = new MultipartBodyBuilder();
-        builder.part("bodyImageUrl", bodyImage.getResource())
-                .filename(bodyImage.getOriginalFilename())
-                .contentType(MediaType.IMAGE_PNG);
+    public String requestBodyAnalysis(Long userId, MultipartFile bodyImage) throws IOException {
+        String taskId = UUID.randomUUID().toString();
+        processBodyAnalysisAsync(taskId, userId, bodyImage);
+        return taskId;
+    }
 
-        String bodyShapeStr;
+    @Async
+    public void processFaceAnalysisAsync(String taskId, Long userId, MultipartFile faceImage) {
         try {
-            bodyShapeStr = webClient.post()
-                    .uri("http://ai-server.com/body-analysis")
+            MultipartBodyBuilder builder = new MultipartBodyBuilder();
+            builder.part("faceImageUrl", faceImage.getResource())
+                    .filename(faceImage.getOriginalFilename())
+                    .contentType(MediaType.IMAGE_PNG);
+
+            String faceShapeStr = webClient.post()
+                    .uri("/face-analysis")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .bodyValue(builder.build())
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
+
+            if (faceShapeStr == null || faceShapeStr.isBlank()) {
+                throw new CommonException(ErrorCode.AI_SERVER_ERROR);
+            }
+
+            FaceShape faceShape;
+            try {
+                faceShape = FaceShape.valueOf(faceShapeStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new CommonException(ErrorCode.INVALID_FACE_SHAPE);
+            }
+
+            StyleAnalysis analysis = styleAnalysisRepository.findByUserId(userId)
+                    .orElseGet(() -> {
+                        if (!userRepository.existsById(userId)) {
+                            throw new CommonException(ErrorCode.NOT_FOUND_USER);
+                        }
+                        return new StyleAnalysis(userId);
+                    });
+
+            analysis.setFaceShape(faceShape);
+            analysis.setAnalysisDate(LocalDateTime.now());
+            styleAnalysisRepository.save(analysis);
+
+            redisTemplate.opsForValue().set("analysis:face:" + taskId, faceShape.name());
+
+        } catch (CommonException e) {
+            log.error("Face analysis failed with known error: {}", e.getErrorCode().name());
+            redisTemplate.opsForValue().set("analysis:face:" + taskId, "ERROR:" + e.getErrorCode().name());
         } catch (Exception e) {
-            throw new CommonException(ErrorCode.AI_SERVER_ERROR); // AI 서버 통신 실패 시
+            log.error("Face analysis failed unexpectedly: {}", e.getMessage());
+            redisTemplate.opsForValue().set("analysis:face:" + taskId, "ERROR:AI_SERVER_ERROR");
         }
+    }
 
-        BodyAnalysis bodyAnalysis;
+
+    @Async
+    public void processBodyAnalysisAsync(String taskId, Long userId, MultipartFile bodyImage) {
         try {
-            bodyAnalysis = BodyAnalysis.valueOf(bodyShapeStr.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new CommonException(ErrorCode.INVALID_BODY_TYPE);
+            MultipartBodyBuilder builder = new MultipartBodyBuilder();
+            builder.part("bodyImageUrl", bodyImage.getResource())
+                    .filename(bodyImage.getOriginalFilename())
+                    .contentType(MediaType.IMAGE_PNG);
+
+            String bodyShapeStr = webClient.post()
+                    .uri("/body-analysis")
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .bodyValue(builder.build())
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            BodyAnalysis bodyAnalysis = BodyAnalysis.valueOf(bodyShapeStr.toUpperCase());
+
+            StyleAnalysis analysis = styleAnalysisRepository.findByUserId(userId)
+                    .orElseGet(() -> new StyleAnalysis(userId));
+
+            analysis.setBodyAnalysis(bodyAnalysis);
+            analysis.setAnalysisDate(LocalDateTime.now());
+            styleAnalysisRepository.save(analysis);
+
+            redisTemplate.opsForValue().set("analysis:body:" + taskId, bodyAnalysis.name());
+        } catch (Exception e) {
+            log.error("Body analysis failed: {}", e.getMessage());
+            redisTemplate.opsForValue().set("analysis:body:" + taskId, "ERROR");
         }
+    }
 
-        StyleAnalysis analysis = styleAnalysisRepository.findByUserId(userId)
-                .orElseGet(() -> {
-                    if (!userRepository.existsById(userId)) {
-                        throw new CommonException(ErrorCode.NOT_FOUND_USER);
-                    }
-                    return new StyleAnalysis(userId);
-                });
+    public String getFaceAnalysisResult(String taskId) {
+        ValueOperations<String, String> ops = redisTemplate.opsForValue();
+        return ops.get("analysis:face:" + taskId);
+    }
 
-        analysis.setBodyAnalysis(bodyAnalysis);
-        analysis.setAnalysisDate(LocalDateTime.now());
-        styleAnalysisRepository.save(analysis);
-
-        return bodyAnalysis.name();
+    public String getBodyAnalysisResult(String taskId) {
+        ValueOperations<String, String> ops = redisTemplate.opsForValue();
+        return ops.get("analysis:body:" + taskId);
     }
 }
