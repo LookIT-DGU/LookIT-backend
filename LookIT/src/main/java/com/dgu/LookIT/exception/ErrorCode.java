@@ -32,6 +32,8 @@ public enum ErrorCode {
     NOT_FOUND_IMAGE(40401, HttpStatus.NOT_FOUND, "존재하지 않는 이미지입니다."),
     INVALID_FACE_SHAPE(40002, HttpStatus.BAD_REQUEST, "AI 서버가 반환한 얼굴형 값이 잘못되었습니다."),
     INVALID_BODY_TYPE(40003, HttpStatus.BAD_REQUEST, "AI 서버가 반환한 바디형 값이 잘못되었습니다."),
+    NOT_FOUND_BODY_ANALYSIS(40004, HttpStatus.BAD_REQUEST, "사용자의 바디타입이 존재하지않습니다."),
+
     //500
     INTERNAL_SERVER_ERROR(50000, HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류입니다"),
     AI_SERVER_ERROR(50200, HttpStatus.BAD_GATEWAY, "AI 서버 통신 중 오류가 발생했습니다.");
