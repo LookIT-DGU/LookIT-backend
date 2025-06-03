@@ -9,6 +9,7 @@ import com.dgu.LookIT.fitting.repository.StyleAnalysisRepository;
 import com.dgu.LookIT.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.MediaType;
@@ -28,7 +29,8 @@ import java.util.UUID;
 public class AnalysisService {
     private final UserRepository userRepository;
     private final StyleAnalysisRepository styleAnalysisRepository;
-    private final StringRedisTemplate redisTemplate;
+//    private final StringRedisTemplate redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     private final WebClient webClient = WebClient.builder()
             .baseUrl("http://ai-server.com")
@@ -129,9 +131,24 @@ public class AnalysisService {
         }
     }
 
-    public String getFaceAnalysisResult(String taskId) {
+    public String getFaceAnalysisResult(String taskId, Long userId) {
         ValueOperations<String, String> ops = redisTemplate.opsForValue();
-        return ops.get("analysis:face:" + taskId);
+        String key = "analysis:face:" + taskId;
+        String result = ops.get(key);
+
+        if (result == null) {
+            // 1. Redis에 없을 경우 DB에서 조회
+            result = styleAnalysisRepository.findByUserId(userId)
+                    .map(StyleAnalysis::getFaceShape)
+                    .orElse(null);
+
+            // 2. 조회된 결과가 있으면 Redis에 캐싱
+            if (result != null) {
+                ops.set(key, result, Duration.ofMinutes(10)); // TTL 10분 등 설정 가능
+            }
+        }
+
+        return result;
     }
 
     public String getBodyAnalysisResult(String taskId) {

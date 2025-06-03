@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface StyleAnalysisRepository extends JpaRepository<StyleAnalysis, Long> {
     Optional<StyleAnalysis> findByUserId(Long userId);
+    Optional<StyleAnalysis> findByTaskId(String taskId);
 }
