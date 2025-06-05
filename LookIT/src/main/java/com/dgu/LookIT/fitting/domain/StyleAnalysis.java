@@ -1,6 +1,7 @@
 package com.dgu.LookIT.fitting.domain;
 
 
+import com.dgu.LookIT.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,8 +20,9 @@ public class StyleAnalysis {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", unique = true, nullable = false)
+    private User user;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "body_Analysis")
@@ -39,7 +41,8 @@ public class StyleAnalysis {
 
     // 생성자 추가: userId만 받아서 새로운 엔티티를 만들 때 사용
     public StyleAnalysis(Long userId) {
-        this.userId = userId;
-        this.analysisDate = LocalDateTime.now(); // 생성 시점
+        this.user = User.builder().id(userId).build(); // ID만 가진 더미 객체
+        this.analysisDate = LocalDateTime.now();
     }
+
 }

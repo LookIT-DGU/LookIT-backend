@@ -35,8 +35,8 @@ public class User {
     @Column(name = "birth_date", nullable = true)
     private LocalDate birthDate;
 
-    @Column(name = "body_image", columnDefinition = "TEXT")
-    private String bodyImage;
+    @Column(name = "user_image", columnDefinition = "TEXT")
+    private String userImage;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -44,22 +44,6 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // ===== 연관 관계 =====
-
-//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<SocialLogin> socialLogins = new ArrayList<>();
-//
-//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<StyleAnalysis> styleAnalyses = new ArrayList<>();
-//
-//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<StyleRecommendation> styleRecommendations = new ArrayList<>();
-//
-//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<BrandRecommendation> brandRecommendations = new ArrayList<>();
-//
-//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<VirtualFitting> virtualFittings = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
@@ -76,21 +60,18 @@ public class User {
         this.serialId = serialId;
     }
 
-    public enum Gender {
-        M, W
-    }
 
     public void myInformationUpdate(MyInformationRequest request) {
         this.name = request.name();
         this.gender = request.gender();
         this.birthDate = request.birthday();
-        this.bodyImage = request.image();
+        this.userImage = request.image();
     }
 
     public void signUpUser(SignUpRequest request) {
         this.name = request.name();
         this.gender = request.gender();
         this.birthDate = request.birthday();
-        this.bodyImage = request.image();
+        this.userImage = request.image();
     }
 }
