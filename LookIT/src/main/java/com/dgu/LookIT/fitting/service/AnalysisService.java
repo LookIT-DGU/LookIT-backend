@@ -131,25 +131,25 @@ public class AnalysisService {
         }
     }
 
-    public String getFaceAnalysisResult(String taskId, Long userId) {
-        ValueOperations<String, String> ops = redisTemplate.opsForValue();
-        String key = "analysis:face:" + taskId;
-        String result = ops.get(key);
-
-        if (result == null) {
-            // 1. Redis에 없을 경우 DB에서 조회
-            result = styleAnalysisRepository.findByUserId(userId)
-                    .map(StyleAnalysis::getFaceShape)
-                    .orElse(null);
-
-            // 2. 조회된 결과가 있으면 Redis에 캐싱
-            if (result != null) {
-                ops.set(key, result, Duration.ofMinutes(10)); // TTL 10분 등 설정 가능
-            }
-        }
-
-        return result;
-    }
+//    public String getFaceAnalysisResult(String taskId, Long userId) {
+//        ValueOperations<String, String> ops = redisTemplate.opsForValue();
+//        String key = "analysis:face:" + taskId;
+//        String result = ops.get(key);
+//
+//        if (result == null) {
+//            // 1. Redis에 없을 경우 DB에서 조회
+//            result = styleAnalysisRepository.findByUserId(userId)
+//                    .map(StyleAnalysis::getFaceShape)
+//                    .orElse(null);
+//
+//            // 2. 조회된 결과가 있으면 Redis에 캐싱
+//            if (result != null) {
+//                ops.set(key, result, Duration.ofMinutes(10)); // TTL 10분 등 설정 가능
+//            }
+//        }
+//
+//        return result;
+//    }
 
     public String getBodyAnalysisResult(String taskId) {
         ValueOperations<String, String> ops = redisTemplate.opsForValue();

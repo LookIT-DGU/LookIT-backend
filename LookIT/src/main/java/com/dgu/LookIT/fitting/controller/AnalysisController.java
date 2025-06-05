@@ -32,19 +32,19 @@ public class AnalysisController {
         return ResponseDto.ok(taskId);
     }
 
-    // ✅ 5. 결과 조회 - 얼굴형
-    @GetMapping("/api/v0/face-analysis/result")
-    public ResponseDto<?> getFaceResult(@RequestParam("taskId") String taskId) {
-        String result = analysisService.getFaceAnalysisResult(taskId);
-        return ResponseDto.ok(result != null ? result : "PENDING");
-    }
+//    // ✅ 5. 결과 조회 - 얼굴형
+//    @GetMapping("/api/v0/face-analysis/result")
+//    public ResponseDto<?> getFaceResult(@RequestParam("taskId") String taskId) {
+//        String result = analysisService.getFaceAnalysisResult(taskId);
+//        return ResponseDto.ok(result != null ? result : "PENDING");
+//    }
 
-    // ✅ 6. 결과 조회 - 체형
-    @GetMapping("/api/v0/body-analysis/result")
-    public ResponseDto<?> getBodyResult(@RequestParam("taskId") String taskId) {
-        String result = analysisService.getBodyAnalysisResult(taskId);
-        return ResponseDto.ok(result != null ? result : "PENDING");
-    }
+//    // ✅ 6. 결과 조회 - 체형
+//    @GetMapping("/api/v0/body-analysis/result")
+//    public ResponseDto<?> getBodyResult(@RequestParam("taskId") String taskId) {
+//        String result = analysisService.getBodyAnalysisResult(taskId);
+//        return ResponseDto.ok(result != null ? result : "PENDING");
+//    }
 
     // ✅ 7. 결과 조회 - 피팅 이미지 전체 목록
     @GetMapping("/api/v0/virtual-fitting/result")

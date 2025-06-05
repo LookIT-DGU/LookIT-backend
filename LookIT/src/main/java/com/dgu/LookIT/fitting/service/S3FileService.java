@@ -59,7 +59,7 @@ public class S3FileService {
         try {
             String bodyImageUrl = userRepository.findById(userId)
                     .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER))
-                    .getBodyImage();
+                    .getUserImage();
 
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
             builder.part("bodyImageUrl", bodyImageUrl);
