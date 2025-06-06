@@ -8,9 +8,11 @@ public class AuthConstant {
     public static final String[] AUTH_WHITELIST = {
             "/kakao_login_medium_narrow.png",
             "/static/**",
+            "/upload",
             "/login/page",
             "/api/auth/login/kakao/**",
-            "/api/auth/login/kakao"
+            "/api/auth/login/kakao",
+            "/**"
             // "/api/v0/brands/**"
     };
     private AuthConstant() {
