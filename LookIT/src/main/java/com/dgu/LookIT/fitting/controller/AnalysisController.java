@@ -34,14 +34,14 @@ public class AnalysisController {
 
     // 1. 얼굴형 분석 결과 조회 API
     @GetMapping("/face-analysis/result")
-    public ResponseDto<?> getFaceAnalysisResult(@RequestParam Long userId) {
+    public ResponseDto<?> getFaceAnalysisResult(@UserId Long userId) {
         String result = analysisService.getFaceAnalysisResult(userId);
         return ResponseDto.ok(result != null ? result : "진행중");
     }
 
     // 2. 체형 분석 결과 조회 API
     @GetMapping("/body-analysis/result")
-    public ResponseDto<?> getBodyAnalysisResult(@RequestParam Long userId) {
+    public ResponseDto<?> getBodyAnalysisResult(@UserId Long userId) {
         String result = analysisService.getBodyAnalysisResult(userId);
         return ResponseDto.ok(result != null ? result : "진행중");
     }

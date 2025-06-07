@@ -6,7 +6,7 @@ import lombok.Builder;
 
 @Builder
 public record DiagnosisRequest(
-        @JsonProperty("BodyType")
+        @JsonProperty("bodyType")
         String bodyType
 ) {
 }
