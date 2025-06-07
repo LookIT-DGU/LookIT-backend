@@ -21,7 +21,7 @@ public class BrandController {
         return ResponseDto.ok(brandService.getAllBrandsWithStyleNames());
     }
 
-    // ✅ 사용자 ID로 브랜드 + 태그 조회
+    //  사용자 ID로 브랜드 + 태그 조회
     @GetMapping("/recommendation")
     public ResponseDto<?> getRecommendedBrands(@UserId Long userId) {
         List<BrandResponse> recommendedBrands = brandService.getRecommendedBrands(userId);

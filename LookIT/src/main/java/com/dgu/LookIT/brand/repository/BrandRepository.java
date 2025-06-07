@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BrandRepository extends JpaRepository<Brand, Long> {
-    List<Brand> findByTags_NameIn(List<String> tagNames);
-    Optional<Brand> findByName(String name);
 
     @Query("SELECT DISTINCT b FROM Brand b " +
             "LEFT JOIN FETCH b.brandTags bt " +
@@ -19,5 +17,5 @@ public interface BrandRepository extends JpaRepository<Brand, Long> {
     List<Brand> findBrandsWithTagsByUserId(@Param("userId") Long userId);
 
 
-
+    List<Brand> findByBrandTags_Tag_NameIn(List<String> tagNames);
 }

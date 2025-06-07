@@ -9,6 +9,7 @@ import com.dgu.LookIT.fitting.dto.response.StyleRecommendationResponse;
 import com.dgu.LookIT.fitting.service.StyleRecommendationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,9 +17,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class BrandService {
-    private final BrandRepository brandRepository;
     private final StyleRecommendationService styleRecommendationService;
 
+    @Transactional(readOnly = true)
     public List<BrandResponse> getRecommendedBrands(Long userId) {
         List<StyleRecommendationResponse> styleList = styleRecommendationService.recommendStyles(userId);
 
@@ -32,6 +33,7 @@ public class BrandService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<BrandStyleResponse> getAllBrandsWithStyleNames() {
         return StyleToBrandsMap.STYLE_BRAND_MAP.entrySet().stream()
                 .flatMap(entry -> {

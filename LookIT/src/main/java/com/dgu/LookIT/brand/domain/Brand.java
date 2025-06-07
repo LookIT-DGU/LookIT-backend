@@ -32,7 +32,6 @@ public class Brand {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    // ✅ 사용자 연관관계 추가
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

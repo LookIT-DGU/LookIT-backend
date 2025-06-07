@@ -3,8 +3,6 @@ package com.dgu.LookIT.fitting.service;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.dgu.LookIT.exception.CommonException;
-import com.dgu.LookIT.exception.ErrorCode;
 import com.dgu.LookIT.fitting.domain.VirtualFitting;
 import com.dgu.LookIT.fitting.dto.response.FittingResultResponse;
 import com.dgu.LookIT.fitting.repository.VirtualFittingRepository;
@@ -23,7 +21,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -38,6 +35,7 @@ public class S3FileService {
     private final VirtualFittingRepository virtualFittingRepository;
     private final WebClient webClient;
 
+    //사용자 이미지 저장
     public String uploadFile(MultipartFile file) throws IOException {
         String fileName = generateFileName(file);
         try {
@@ -48,49 +46,67 @@ public class S3FileService {
         }
     }
 
-    public String requestFittingAsync(Long userId, MultipartFile clothesImage) {
+    //AI 이미지 저장
+    public String uploadByteImage(byte[] imageBytes, String fileName) throws IOException {
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentLength(imageBytes.length);
+        metadata.setContentType("image/png");
+
+        s3Client.putObject(bucketName, fileName, new java.io.ByteArrayInputStream(imageBytes), metadata);
+        return s3Client.getUrl(bucketName, fileName).toString();
+    }
+
+    public String requestFittingAsync(Long userId, MultipartFile clothesImage, MultipartFile bodyImage) {
         String taskId = UUID.randomUUID().toString();
-        processFittingAsync(taskId, userId, clothesImage);
+        processFittingAsync(taskId, userId, clothesImage, bodyImage);
         return taskId;
     }
 
-    @Async
-    public void processFittingAsync(String taskId, Long userId, MultipartFile clothesImage) {
-        try {
-            String bodyImageUrl = userRepository.findById(userId)
-                    .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER))
-                    .getUserImage();
+    //전체 이미지 조회
+    public List<FittingResultResponse> getFittingResults(Long userId) {
+        return virtualFittingRepository.findAllByUserId(userId).stream()
+                .map(FittingResultResponse::from) // record의 정적 메서드 사용
+                .toList();
+    }
 
+
+    @Async
+    public void processFittingAsync(String taskId, Long userId,
+                                    MultipartFile clothesImage, MultipartFile bodyImage) {
+        try {
+            // 1. AI 서버로 이미지 전송
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
-            builder.part("bodyImageUrl", bodyImageUrl);
             builder.part("clothesImage", clothesImage.getResource())
                     .filename(clothesImage.getOriginalFilename())
                     .contentType(MediaType.IMAGE_PNG);
 
-            String resultUrl = webClient.post()
+            builder.part("bodyImage", bodyImage.getResource())
+                    .filename(bodyImage.getOriginalFilename())
+                    .contentType(MediaType.IMAGE_PNG);
+
+            // 2. AI 서버에서 결과 이미지 URL 반환 (or base64 string)
+            byte[] resultImage = webClient.post()
                     .uri("/fitting")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .bodyValue(builder.build())
                     .retrieve()
-                    .bodyToMono(String.class)
+                    .bodyToMono(byte[].class)
                     .block();
 
+            // 3. S3에 결과 이미지 업로드
+            String resultImageUrl = uploadByteImage(resultImage, "result-" + taskId + ".png");
+
+            // 4. DB 저장
             VirtualFitting fitting = VirtualFitting.builder()
                     .userId(userId)
-                    .resultImageUrl(resultUrl)
+                    .resultImageUrl(resultImageUrl)
                     .createdAt(LocalDateTime.now())
                     .build();
 
             virtualFittingRepository.save(fitting);
         } catch (Exception e) {
-            log.error("Fitting async process failed: {}", e.getMessage());
+            log.error("Fitting async process failed: {}", e.getMessage(), e);
         }
-    }
-
-    public List<FittingResultResponse> getFittingResults(Long userId) {
-        return virtualFittingRepository.findAllByUserId(userId).stream()
-                .map(FittingResultResponse::from)
-                .collect(Collectors.toList());
     }
 
     private ObjectMetadata getObjectMetadata(MultipartFile file) {
