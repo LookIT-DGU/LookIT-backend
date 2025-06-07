@@ -68,6 +68,10 @@ dependencies {
 
 	//webclient
 	implementation 'org.springframework:spring-webflux'
+
+	// build.gradle
+	runtimeOnly "io.netty:netty-resolver-dns-native-macos:4.1.119.Final:osx-aarch_64"
+
 }
 
 test {

@@ -34,4 +34,9 @@ public class StyleRecommendation {
     protected void onCreate() {
         this.recommendationDate = LocalDateTime.now();
     }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.recommendationDate = LocalDateTime.now();
+    }
 }
