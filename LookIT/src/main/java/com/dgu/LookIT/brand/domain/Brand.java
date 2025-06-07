@@ -1,5 +1,6 @@
 package com.dgu.LookIT.brand.domain;
 
+import com.dgu.LookIT.user.domain.User; // 유저 엔티티 import 필요
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,7 +20,7 @@ public class Brand {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id") // 명시적 선언
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "name", nullable = false, length = 100)
@@ -30,6 +31,11 @@ public class Brand {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    // ✅ 사용자 연관관계 추가
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @OneToMany(mappedBy = "brand", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference

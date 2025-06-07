@@ -12,14 +12,12 @@ public interface BrandRepository extends JpaRepository<Brand, Long> {
     List<Brand> findByTags_NameIn(List<String> tagNames);
     Optional<Brand> findByName(String name);
 
-    @Query("""
-    SELECT DISTINCT bt.brand
-    FROM BrandTag bt
-    WHERE bt.tag.name IN (
-        SELECT sr.styleType
-        FROM StyleRecommendation sr
-        WHERE sr.user.id = :userId
-    )
-""")
-    List<Brand> findBrandsByUserId(@Param("userId") Long userId);
+    @Query("SELECT DISTINCT b FROM Brand b " +
+            "LEFT JOIN FETCH b.brandTags bt " +
+            "LEFT JOIN FETCH bt.tag " +
+            "WHERE b.user.id = :userId")
+    List<Brand> findBrandsWithTagsByUserId(@Param("userId") Long userId);
+
+
+
 }
