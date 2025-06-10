@@ -3,6 +3,7 @@ package com.dgu.LookIT.fitting.controller;
 
 import com.dgu.LookIT.annotaion.UserId;
 import com.dgu.LookIT.fitting.dto.request.DiagnosisRequest;
+import com.dgu.LookIT.fitting.dto.request.FaceMoodRequest;
 import com.dgu.LookIT.fitting.service.AnalysisService;
 import com.dgu.LookIT.fitting.service.S3FileService;
 import com.dgu.LookIT.global.ResponseDto;
@@ -50,5 +51,11 @@ public class AnalysisController {
     public ResponseDto<?> postBodyDiagnosis(@UserId Long userId, @RequestBody DiagnosisRequest request) {
         analysisService.postBodyType(userId, request.bodyType());
         return ResponseDto.ok(request.bodyType());
+    }
+
+    @PostMapping("/face-mood")
+    public ResponseDto<?> postFaceMood(@UserId Long userId, @RequestBody FaceMoodRequest request) {
+        analysisService.postFaceMood(userId, request.faceMood());
+        return ResponseDto.ok(request.faceMood());
     }
 }

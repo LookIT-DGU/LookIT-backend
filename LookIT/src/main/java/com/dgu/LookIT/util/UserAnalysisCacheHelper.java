@@ -1,13 +1,12 @@
 package com.dgu.LookIT.util;
 
-import com.dgu.LookIT.fitting.domain.BodyAnalysis;
+import com.dgu.LookIT.fitting.domain.*;
 import com.dgu.LookIT.global.constant.RedisKeyConstants;
 import com.dgu.LookIT.exception.CommonException;
 import com.dgu.LookIT.exception.ErrorCode;
-import com.dgu.LookIT.fitting.domain.BodyType;
-import com.dgu.LookIT.fitting.domain.FaceShape;
-import com.dgu.LookIT.fitting.domain.StyleAnalysis;
 import com.dgu.LookIT.fitting.repository.StyleAnalysisRepository;
+import com.dgu.LookIT.user.domain.User;
+import com.dgu.LookIT.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -22,21 +21,24 @@ public class UserAnalysisCacheHelper {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final StyleAnalysisRepository styleAnalysisRepository;
+    private final UserRepository userRepository;
     private static final Duration TTL = Duration.ofMinutes(10);
 
     public BodyType getBodyType(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(()-> new CommonException(ErrorCode.NOT_FOUND_USER));
         return BodyType.valueOf(getOrLoad(
                 RedisKeyConstants.BODY_TYPE_PREFIX + userId,
-                () -> styleAnalysisRepository.findByUserId(userId)
+                () -> styleAnalysisRepository.findByUser(user)
                         .map(StyleAnalysis::getBodyType)
                         .map(Enum::name)
                         .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_BODY_TYPE))
         ));
     }
     public BodyAnalysis getBodyAnalysis(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(()-> new CommonException(ErrorCode.NOT_FOUND_USER));
         return BodyAnalysis.valueOf(getOrLoad(
                 RedisKeyConstants.BODY_ANALYSIS_PREFIX + userId,
-                () -> styleAnalysisRepository.findByUserId(userId)
+                () -> styleAnalysisRepository.findByUser(user)
                         .map(StyleAnalysis::getBodyAnalysis)
                         .map(Enum::name)
                         .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_BODY_ANALYSIS))
@@ -44,9 +46,10 @@ public class UserAnalysisCacheHelper {
     }
 
     public FaceShape getFaceShape(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(()-> new CommonException(ErrorCode.NOT_FOUND_USER));
         return FaceShape.valueOf(getOrLoad(
                 RedisKeyConstants.FACE_TYPE_PREFIX + userId,
-                () -> styleAnalysisRepository.findByUserId(userId)
+                () -> styleAnalysisRepository.findByUser(user)
                         .map(StyleAnalysis::getFaceShape)
                         .map(Enum::name)
                         .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_FACE_ANALYSIS))
@@ -101,9 +104,10 @@ public class UserAnalysisCacheHelper {
     }
 
     private void setAndPersist(String redisKey, String value, Long userId, java.util.function.Consumer<StyleAnalysis> updater) {
+        User user = userRepository.findById(userId).orElseThrow(()-> new CommonException(ErrorCode.NOT_FOUND_USER));
         redisTemplate.opsForValue().set(redisKey, value, TTL);
 
-        Optional<StyleAnalysis> existing = styleAnalysisRepository.findByUserId(userId);
+        Optional<StyleAnalysis> existing = styleAnalysisRepository.findByUser(user);
         StyleAnalysis analysis = existing.orElseGet(() -> new StyleAnalysis(userId));
         updater.accept(analysis);
         styleAnalysisRepository.save(analysis);
