@@ -2,11 +2,10 @@ package com.dgu.LookIT.fitting.service;
 
 import com.dgu.LookIT.exception.CommonException;
 import com.dgu.LookIT.exception.ErrorCode;
-import com.dgu.LookIT.fitting.domain.BodyAnalysis;
-import com.dgu.LookIT.fitting.domain.BodyType;
-import com.dgu.LookIT.fitting.domain.StyleRecommendation;
+import com.dgu.LookIT.fitting.domain.*;
 import com.dgu.LookIT.fitting.dto.response.StyleRecommendationResponse;
 import com.dgu.LookIT.fitting.dto.response.StyleTipsResponse;
+import com.dgu.LookIT.fitting.repository.StyleAnalysisRepository;
 import com.dgu.LookIT.fitting.repository.StyleRecommendationRepository;
 import com.dgu.LookIT.user.domain.User;
 import com.dgu.LookIT.user.repository.UserRepository;
@@ -28,11 +27,20 @@ public class StyleRecommendationService {
 
     private final UserAnalysisCacheHelper cacheHelper;
     private final StyleRecommendationRepository styleRecommendationRepository;
+    private final StyleAnalysisRepository styleAnalysisRepository;
     private final UserRepository userRepository;
 
     public List<StyleRecommendationResponse> recommendStyles(Long userId) {
         BodyType bodyType = cacheHelper.getBodyType(userId);
-        return StyleRecommendationUtil.getRecommendations(bodyType);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER));
+
+        StyleAnalysis styleAnalysis = styleAnalysisRepository.findByUser(user)
+                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_STYLE_RECOMMENDATION));
+
+        FaceMood faceMood = styleAnalysis.getFaceMood();
+
+        return StyleRecommendationUtil.getRecommendation(bodyType, faceMood);
     }
 
     @Transactional

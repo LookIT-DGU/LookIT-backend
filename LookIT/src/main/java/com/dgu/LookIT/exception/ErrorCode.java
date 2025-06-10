@@ -11,6 +11,9 @@ public enum ErrorCode {
     MISSING_REQUEST_PARAMETER(40001, HttpStatus.BAD_REQUEST, "필수 요청 파라미터가 누락되었습니다."),
     INVALID_PARAMETER_FORMAT(40002, HttpStatus.BAD_REQUEST, "요청에 유효하지 않은 인자 형식입니다."),
     BAD_REQUEST_JSON(40003, HttpStatus.BAD_REQUEST, "잘못된 JSON 형식입니다."),
+    INVALID_FACE_MOOD(40004, HttpStatus.BAD_REQUEST, "사용자의 얼굴분위기 값이 잘못되었습니다."),
+    INVALID_FACE_SHAPE(40005, HttpStatus.BAD_REQUEST, "AI 서버가 반환한 얼굴형 값이 잘못되었습니다."),
+    INVALID_BODY_TYPE(40006, HttpStatus.BAD_REQUEST, "AI 서버가 반환한 바디형 값이 잘못되었습니다."),
 
     //401
     INVALID_HEADER_VALUE(40100, HttpStatus.UNAUTHORIZED, "올바르지 않은 헤더값입니다."),
@@ -30,12 +33,10 @@ public enum ErrorCode {
     //404
     NOT_FOUND_USER(40400, HttpStatus.NOT_FOUND, "존재하지 않는 사용자입니다."),
     NOT_FOUND_IMAGE(40401, HttpStatus.NOT_FOUND, "존재하지 않는 이미지입니다."),
-    INVALID_FACE_SHAPE(40002, HttpStatus.BAD_REQUEST, "AI 서버가 반환한 얼굴형 값이 잘못되었습니다."),
-    INVALID_BODY_TYPE(40003, HttpStatus.BAD_REQUEST, "AI 서버가 반환한 바디형 값이 잘못되었습니다."),
-    NOT_FOUND_BODY_ANALYSIS(40004, HttpStatus.BAD_REQUEST, "사용자의 머신러닝 바디 분석이 존재하지않습니다."),
-    NOT_FOUND_BODY_TYPE(40005, HttpStatus.BAD_REQUEST, "사용자의 바디타입이 존재하지않습니다."),
-    NOT_FOUND_FACE_ANALYSIS(40006, HttpStatus.BAD_REQUEST, "사용자의 얼굴타입이 존재하지않습니다."),
-    NOT_FOUND_STYLE_RECOMMENDATION(40007, HttpStatus.BAD_REQUEST, "스타일팁이 존재하지않습니다."),
+    NOT_FOUND_BODY_ANALYSIS(40402, HttpStatus.NOT_FOUND, "사용자의 머신러닝 바디 분석이 존재하지않습니다."),
+    NOT_FOUND_BODY_TYPE(40403, HttpStatus.NOT_FOUND, "사용자의 바디타입이 존재하지않습니다."),
+    NOT_FOUND_FACE_ANALYSIS(40404, HttpStatus.NOT_FOUND, "사용자의 얼굴타입이 존재하지않습니다."),
+    NOT_FOUND_STYLE_RECOMMENDATION(40007, HttpStatus.NOT_FOUND, "스타일팁이 존재하지않습니다."),
 
     //500
     INTERNAL_SERVER_ERROR(50000, HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류입니다"),

@@ -36,6 +36,10 @@ public class StyleAnalysis {
     @Column(name = "face_shape")
     private FaceShape faceShape;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "face_mood")
+    private FaceMood faceMood;
+
     @Column(name = "analysis_date")
     private LocalDateTime analysisDate;
 
