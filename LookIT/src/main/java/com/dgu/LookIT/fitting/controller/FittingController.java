@@ -33,8 +33,8 @@ public class FittingController {
             @RequestParam("clothes") MultipartFile clothesImage,
             @RequestParam("body") MultipartFile bodyImage
     ) throws IOException {
-        String imageTaskId = s3FileService.requestFittingAsync(userId, clothesImage, bodyImage);
-        return ResponseDto.ok(imageTaskId);
+        s3FileService.processFittingAsync(userId, clothesImage, bodyImage);
+        return ResponseDto.ok("가상 피팅 요청이 처리 완료됐습니다.");
     }
 
     // 3 가상피팅 결과 반환
