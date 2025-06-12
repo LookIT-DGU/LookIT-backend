@@ -25,7 +25,7 @@ public class BrandService {
 
         // 3. 스타일 이름(lookName)을 통해 STYLE_BRAND_MAP에서 브랜드 리스트 조회
         return styleList.stream()
-                .map(StyleRecommendationResponse::lookName) // ✅ record method
+                .map(StyleRecommendationResponse::lookName) //record method
                 .flatMap(styleName -> StyleToBrandsMap.STYLE_BRAND_MAP
                         .getOrDefault(styleName, List.of()).stream())
                 .distinct() // 중복 브랜드 제거
