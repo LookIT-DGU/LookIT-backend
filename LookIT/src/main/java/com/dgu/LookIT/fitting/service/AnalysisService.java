@@ -53,13 +53,6 @@ public class AnalysisService {
         }
     }
 
-    public void requestFaceAnalysis(Long userId, MultipartFile faceImage) {
-        processFaceAnalysisAsync(userId, faceImage);
-    }
-
-    public void requestBodyAnalysis(Long userId, MultipartFile bodyImage) {
-        processBodyAnalysisAsync(userId, bodyImage);
-    }
 
     @Async
     public void processFaceAnalysisAsync(Long userId, MultipartFile faceImage) {
@@ -69,29 +62,31 @@ public class AnalysisService {
                     .filename(faceImage.getOriginalFilename())
                     .contentType(MediaType.IMAGE_PNG);
 
-            String faceShapeStr = webClient.post()
+            webClient.post()
                     .uri("/face-analysis")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .bodyValue(builder.build())
                     .retrieve()
                     .bodyToMono(String.class)
-                    .block();
+                    .subscribe(faceShapeStr -> {
+                        if (faceShapeStr == null || faceShapeStr.isBlank()) {
+                            log.error("AI 서버에서 받은 얼굴형 응답이 비어 있음");
+                            return;
+                        }
 
-            if (faceShapeStr == null || faceShapeStr.isBlank()) {
-                throw new CommonException(ErrorCode.AI_SERVER_ERROR);
-            }
+                        try {
+                            FaceShape faceShape = FaceShape.valueOf(faceShapeStr.toUpperCase());
+                            userAnalysisCacheHelper.setFaceShape(userId, faceShape.name());
+                        } catch (IllegalArgumentException e) {
+                            log.error("알 수 없는 얼굴형 문자열 수신: {}", faceShapeStr);
+                        }
 
-            FaceShape faceShape;
-            try {
-                faceShape = FaceShape.valueOf(faceShapeStr.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new CommonException(ErrorCode.INVALID_FACE_SHAPE);
-            }
-
-            userAnalysisCacheHelper.setFaceShape(userId, faceShape.name());
+                    }, error -> {
+                        log.error("AI 서버 얼굴형 분석 실패: {}", error.getMessage(), error);
+                    });
 
         } catch (Exception e) {
-            log.error("Face analysis failed unexpectedly: {}", e.getMessage());
+            log.error("Face analysis 요청 자체 실패: {}", e.getMessage(), e);
         }
     }
 
@@ -103,21 +98,29 @@ public class AnalysisService {
                     .filename(bodyImage.getOriginalFilename())
                     .contentType(MediaType.IMAGE_PNG);
 
-            String bodyShapeStr = webClient.post()
+            webClient.post()
                     .uri("/body-analysis")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .bodyValue(builder.build())
                     .retrieve()
                     .bodyToMono(String.class)
-                    .block();
+                    .subscribe(bodyShapeStr -> {
+                        try {
+                            BodyAnalysis bodyAnalysis = BodyAnalysis.valueOf(bodyShapeStr.toUpperCase());
+                            userAnalysisCacheHelper.setBodyAnalysis(userId, bodyAnalysis.name());
+                        } catch (IllegalArgumentException e) {
+                            log.error("알 수 없는 체형 문자열 수신: {}", bodyShapeStr);
+                        }
 
-            BodyAnalysis bodyAnalysis = BodyAnalysis.valueOf(bodyShapeStr.toUpperCase());
+                    }, error -> {
+                        log.error("AI 서버 체형 분석 실패: {}", error.getMessage(), error);
+                    });
 
-            userAnalysisCacheHelper.setBodyAnalysis(userId, bodyAnalysis.name());
         } catch (Exception e) {
-            log.error("Body analysis failed: {}", e.getMessage());
+            log.error("Body analysis 요청 자체 실패: {}", e.getMessage(), e);
         }
     }
+
 
     @Transactional(readOnly = true)
     public String getFaceAnalysisResult(Long userId) {

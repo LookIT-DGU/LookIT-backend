@@ -56,12 +56,6 @@ public class S3FileService {
         return s3Client.getUrl(bucketName, fileName).toString();
     }
 
-    public String requestFittingAsync(Long userId, MultipartFile clothesImage, MultipartFile bodyImage) {
-        String taskId = UUID.randomUUID().toString();
-        processFittingAsync(taskId, userId, clothesImage, bodyImage);
-        return taskId;
-    }
-
     //전체 이미지 조회
     public List<FittingResultResponse> getFittingResults(Long userId) {
         return virtualFittingRepository.findAllByUserId(userId).stream()
@@ -71,43 +65,52 @@ public class S3FileService {
 
 
     @Async
-    public void processFittingAsync(String taskId, Long userId,
+    public void processFittingAsync(Long userId,
                                     MultipartFile clothesImage, MultipartFile bodyImage) {
+
+        String taskId = UUID.randomUUID().toString();
+
         try {
-            // 1. AI 서버로 이미지 전송
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
             builder.part("clothesImage", clothesImage.getResource())
                     .filename(clothesImage.getOriginalFilename())
                     .contentType(MediaType.IMAGE_PNG);
-
             builder.part("bodyImage", bodyImage.getResource())
                     .filename(bodyImage.getOriginalFilename())
                     .contentType(MediaType.IMAGE_PNG);
 
-            // 2. AI 서버에서 결과 이미지 URL 반환 (or base64 string)
-            byte[] resultImage = webClient.post()
+            // 비동기 방식: subscribe 사용
+            webClient.post()
                     .uri("/fitting")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .bodyValue(builder.build())
                     .retrieve()
                     .bodyToMono(byte[].class)
-                    .block();
+                    .subscribe(resultImage -> {
+                        try {
+                            // S3 업로드
+                            String resultImageUrl = uploadByteImage(resultImage, "result-" + taskId + ".png");
 
-            // 3. S3에 결과 이미지 업로드
-            String resultImageUrl = uploadByteImage(resultImage, "result-" + taskId + ".png");
+                            // DB 저장
+                            VirtualFitting fitting = VirtualFitting.builder()
+                                    .userId(userId)
+                                    .resultImageUrl(resultImageUrl)
+                                    .createdAt(LocalDateTime.now())
+                                    .build();
 
-            // 4. DB 저장
-            VirtualFitting fitting = VirtualFitting.builder()
-                    .userId(userId)
-                    .resultImageUrl(resultImageUrl)
-                    .createdAt(LocalDateTime.now())
-                    .build();
+                            virtualFittingRepository.save(fitting);
+                        } catch (Exception ex) {
+                            log.error("Error during fitting result handling", ex);
+                        }
+                    }, error -> {
+                        log.error("AI 서버 응답 에러", error);
+                    });
 
-            virtualFittingRepository.save(fitting);
         } catch (Exception e) {
-            log.error("Fitting async process failed: {}", e.getMessage(), e);
+            log.error("Fitting async process setup failed: {}", e.getMessage(), e);
         }
     }
+
 
     private ObjectMetadata getObjectMetadata(MultipartFile file) {
         ObjectMetadata metadata = new ObjectMetadata();
