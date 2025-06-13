@@ -23,14 +23,14 @@ public class AnalysisController {
     @PostMapping("/face-analysis")
     public ResponseDto<?> requestFaceAnalysis(@UserId Long userId, @RequestParam("analysis") MultipartFile analysisImage) throws IOException {
         analysisService.processFaceAnalysisAsync(userId, analysisImage);
-        return ResponseDto.ok("얼굴형 분석 완료");
+        return ResponseDto.ok("얼굴형 분석 요청 완료");
     }
 
     // 4. 비동기 방식 - 체형 분석 요청
     @PostMapping("/body-analysis")
     public ResponseDto<?> requestBodyAnalysis(@UserId Long userId, @RequestParam("analysis") MultipartFile analysisImage) throws IOException {
         analysisService.processBodyAnalysisAsync(userId, analysisImage);
-        return ResponseDto.ok("체형 분석 완료");
+        return ResponseDto.ok("체형 분석 요청 완료");
     }
 
     // 1. 얼굴형 분석 결과 조회 API
