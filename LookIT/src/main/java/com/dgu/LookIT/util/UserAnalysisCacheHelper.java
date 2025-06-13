@@ -10,6 +10,7 @@ import com.dgu.LookIT.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -66,8 +67,9 @@ public class UserAnalysisCacheHelper {
         );
     }
 
+    @Transactional
     public void setBodyAnalysis(Long userId, String bodyAnalysisStr) {
-        BodyAnalysis bodyAnalysis = parseEnum(bodyAnalysisStr, BodyAnalysis.class, ErrorCode.INVALID_BODY_TYPE);
+        BodyAnalysis bodyAnalysis = parseEnum(bodyAnalysisStr, BodyAnalysis.class, ErrorCode.INVALID_BODY_ANALYSIS);
         setAndPersist(
                 RedisKeyConstants.BODY_TYPE_PREFIX + userId,
                 bodyAnalysis.name(),
@@ -76,6 +78,7 @@ public class UserAnalysisCacheHelper {
         );
     }
 
+    @Transactional
     public void setFaceShape(Long userId, String faceShapeStr) {
         FaceShape faceShape = parseEnum(faceShapeStr, FaceShape.class, ErrorCode.INVALID_FACE_SHAPE);
         setAndPersist(
