@@ -8,6 +8,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
     @Bean
     public WebClient webClient(WebClient.Builder builder) {
-        return builder.baseUrl("http://172.30.1.38:8000").build();
+        return builder.baseUrl("http://43.200.171.243:8000").build();
     }
 }

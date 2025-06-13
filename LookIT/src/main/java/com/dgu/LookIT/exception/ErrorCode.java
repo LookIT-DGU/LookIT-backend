@@ -13,7 +13,8 @@ public enum ErrorCode {
     BAD_REQUEST_JSON(40003, HttpStatus.BAD_REQUEST, "잘못된 JSON 형식입니다."),
     INVALID_FACE_MOOD(40004, HttpStatus.BAD_REQUEST, "사용자의 얼굴분위기 값이 잘못되었습니다."),
     INVALID_FACE_SHAPE(40005, HttpStatus.BAD_REQUEST, "AI 서버가 반환한 얼굴형 값이 잘못되었습니다."),
-    INVALID_BODY_TYPE(40006, HttpStatus.BAD_REQUEST, "AI 서버가 반환한 바디형 값이 잘못되었습니다."),
+    INVALID_BODY_TYPE(40006, HttpStatus.BAD_REQUEST, "바디형 값이 잘못되었습니다."),
+    INVALID_BODY_ANALYSIS(40007, HttpStatus.BAD_REQUEST, "AI 서버가 반환한 바디형 분석 값이 잘못되었습니다."),
 
     //401
     INVALID_HEADER_VALUE(40100, HttpStatus.UNAUTHORIZED, "올바르지 않은 헤더값입니다."),

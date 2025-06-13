@@ -13,7 +13,6 @@ import com.dgu.LookIT.user.repository.UserRepository;
 import com.dgu.LookIT.util.UserAnalysisCacheHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
@@ -62,7 +61,7 @@ public class AnalysisService {
     @Async
     public void processFaceAnalysisAsync(Long userId, MultipartFile faceImage) {
         try {
-            // 파일 내용을 ByteArrayResource로 감싸 전송
+            // 파일 내용을 ByteArrayResource로 감싸기
             ByteArrayResource resource = new ByteArrayResource(faceImage.getBytes()) {
                 @Override
                 public String getFilename() {
@@ -70,10 +69,13 @@ public class AnalysisService {
                 }
             };
 
+            // 실제 Content-Type 추출
+            String contentType = faceImage.getContentType(); // 예: image/png, image/jpeg 등
+
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
-            builder.part("file", resource) // key 이름 "file"
+            builder.part("analysis", resource)
                     .filename(faceImage.getOriginalFilename())
-                    .contentType(MediaType.IMAGE_PNG);
+                    .contentType(MediaType.parseMediaType(contentType));
 
             webClient.post()
                     .uri("/face-analysis")
@@ -81,17 +83,13 @@ public class AnalysisService {
                     .bodyValue(builder.build())
                     .retrieve()
                     .bodyToMono(String.class)
-                    .doOnError(e -> {
-                        log.error("[요청 실패] 얼굴형 분석 AI 서버 연결 실패: {}", e.getMessage(), e);
-                    })
                     .subscribe(faceShapeStr -> {
                         if (faceShapeStr == null || faceShapeStr.isBlank()) {
-                            log.error("[응답 실패] AI 서버 응답이 비어 있음");
+                            log.error("[응답 실패] AI 서버의 얼굴형 응답이 비어 있음");
                             return;
                         }
 
                         try {
-                            // JSON 파싱해서 predicted_label 추출
                             ObjectMapper objectMapper = new ObjectMapper();
                             JsonNode node = objectMapper.readTree(faceShapeStr);
                             String label = node.get("predicted_label").asText().toUpperCase();
@@ -104,7 +102,7 @@ public class AnalysisService {
                             log.error("[응답 파싱 실패] 얼굴형 JSON 파싱 실패: {}", faceShapeStr, e);
                         }
                     }, error -> {
-                        log.error("[응답 에러] 얼굴형 분석 요청 실패: {}", error.getMessage(), error);
+                        log.error("[응답 에러] AI 서버 얼굴형 분석 실패: {}", error.getMessage(), error);
                     });
 
         } catch (Exception e) {
@@ -113,11 +111,10 @@ public class AnalysisService {
     }
 
 
-
     @Async
     public void processBodyAnalysisAsync(Long userId, MultipartFile bodyImage) {
         try {
-            // 메모리에서 안전하게 전송할 수 있도록 변환
+            // 파일 내용을 ByteArrayResource로 감싸기
             ByteArrayResource resource = new ByteArrayResource(bodyImage.getBytes()) {
                 @Override
                 public String getFilename() {
@@ -125,10 +122,13 @@ public class AnalysisService {
                 }
             };
 
+            // 실제 Content-Type 추출
+            String contentType = bodyImage.getContentType(); // 예: image/png, image/jpeg 등
+
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
-            builder.part("file", resource)
+            builder.part("analysis", resource)
                     .filename(bodyImage.getOriginalFilename())
-                    .contentType(MediaType.IMAGE_PNG);
+                    .contentType(MediaType.parseMediaType(contentType));
 
             webClient.post()
                     .uri("/body-analysis")
@@ -145,7 +145,7 @@ public class AnalysisService {
                         try {
                             ObjectMapper objectMapper = new ObjectMapper();
                             JsonNode node = objectMapper.readTree(bodyShapeStr);
-                            String label = node.get("predicted_label").asText().toUpperCase();
+                            String label = node.get("body_analysis").asText().toUpperCase();
 
                             BodyAnalysis bodyAnalysis = BodyAnalysis.valueOf(label);
                             userAnalysisCacheHelper.setBodyAnalysis(userId, bodyAnalysis.name());
@@ -159,9 +159,10 @@ public class AnalysisService {
                     });
 
         } catch (Exception e) {
-            log.error("[코드 오류] 체형 분석 요청 multipart 구성 중 예외 발생: {}", e.getMessage(), e);
+            log.error("[코드 오류] 체형 분석 multipart 구성 중 예외 발생: {}", e.getMessage(), e);
         }
     }
+
 
     @Transactional(readOnly = true)
     public String getFaceAnalysisResult(Long userId) {

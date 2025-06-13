@@ -5,13 +5,10 @@ import com.dgu.LookIT.annotaion.UserId;
 import com.dgu.LookIT.fitting.dto.request.DiagnosisRequest;
 import com.dgu.LookIT.fitting.dto.request.FaceMoodRequest;
 import com.dgu.LookIT.fitting.service.AnalysisService;
-import com.dgu.LookIT.fitting.service.S3FileService;
 import com.dgu.LookIT.global.ResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/v0")
@@ -21,14 +18,14 @@ public class AnalysisController {
 
     // 3. 비동기 방식 - 얼굴형 분석 요청
     @PostMapping("/face-analysis")
-    public ResponseDto<?> requestFaceAnalysis(@UserId Long userId, @RequestParam("analysis") MultipartFile analysisImage) throws IOException {
+    public ResponseDto<?> requestFaceAnalysis(@UserId Long userId, @RequestParam("analysis") MultipartFile analysisImage){
         analysisService.processFaceAnalysisAsync(userId, analysisImage);
         return ResponseDto.ok("얼굴형 분석 요청 완료");
     }
 
     // 4. 비동기 방식 - 체형 분석 요청
     @PostMapping("/body-analysis")
-    public ResponseDto<?> requestBodyAnalysis(@UserId Long userId, @RequestParam("analysis") MultipartFile analysisImage) throws IOException {
+    public ResponseDto<?> requestBodyAnalysis(@UserId Long userId, @RequestParam("analysis") MultipartFile analysisImage) {
         analysisService.processBodyAnalysisAsync(userId, analysisImage);
         return ResponseDto.ok("체형 분석 요청 완료");
     }

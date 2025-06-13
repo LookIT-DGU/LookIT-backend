@@ -7,6 +7,7 @@ import com.dgu.LookIT.fitting.domain.VirtualFitting;
 import com.dgu.LookIT.fitting.dto.response.FittingResultResponse;
 import com.dgu.LookIT.fitting.repository.VirtualFittingRepository;
 import com.dgu.LookIT.user.repository.UserRepository;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,32 +65,30 @@ public class S3FileService {
     }
 
 
+
     @Async
     public void processFittingAsync(Long userId,
                                     MultipartFile clothesImage, MultipartFile bodyImage) {
 
-        String taskId = UUID.randomUUID().toString();
-
         try {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
-            builder.part("clothesImage", clothesImage.getResource())
+            builder.part("clothes", clothesImage.getResource())  // clothes
                     .filename(clothesImage.getOriginalFilename())
                     .contentType(MediaType.IMAGE_PNG);
-            builder.part("bodyImage", bodyImage.getResource())
+            builder.part("body", bodyImage.getResource())        // body
                     .filename(bodyImage.getOriginalFilename())
                     .contentType(MediaType.IMAGE_PNG);
 
-            // 비동기 방식: subscribe 사용
             webClient.post()
                     .uri("/fitting")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .bodyValue(builder.build())
                     .retrieve()
-                    .bodyToMono(byte[].class)
-                    .subscribe(resultImage -> {
+                    .bodyToMono(JsonNode.class) // JSON 응답 받기
+                    .subscribe(jsonNode -> {
                         try {
-                            // S3 업로드
-                            String resultImageUrl = uploadByteImage(resultImage, "result-" + taskId + ".png");
+                            // image.url 필드 추출
+                            String resultImageUrl = jsonNode.path("image").path("url").asText();
 
                             // DB 저장
                             VirtualFitting fitting = VirtualFitting.builder()

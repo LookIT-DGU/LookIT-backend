@@ -39,3 +39,9 @@ cloud:
       static: ap-northeast-2  # 서울 리전
     s3:
       bucket: lookit-bucket
+
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 30MB
+
