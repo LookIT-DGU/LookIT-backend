@@ -1,8 +1,17 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+  codec:
+    max-in-memory-size: 100MB
+
   datasource:
     url: jdbc:mysql://localhost/lookit
     username: "root"
     password: "0302"
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -11,6 +20,7 @@ spring:
         show_sql: true
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
+
   data:
     redis:
       host: localhost
@@ -36,12 +46,6 @@ cloud:
       access-key: ${AWS_ACCESS_KEY}
       secret-key: ${AWS_SECRET_KEY}
     region:
-      static: ap-northeast-2  # 서울 리전
+      static: ap-northeast-2
     s3:
       bucket: lookit-bucket
-
-  servlet:
-    multipart:
-      max-file-size: 30MB
-      max-request-size: 30MB
-

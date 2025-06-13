@@ -8,9 +8,11 @@ import com.dgu.LookIT.fitting.dto.response.FittingResultResponse;
 import com.dgu.LookIT.fitting.repository.VirtualFittingRepository;
 import com.dgu.LookIT.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.scheduling.annotation.Async;
@@ -19,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,54 +60,113 @@ public class S3FileService {
 
     //전체 이미지 조회
     public List<FittingResultResponse> getFittingResults(Long userId) {
-        return virtualFittingRepository.findAllByUserId(userId).stream()
+        return virtualFittingRepository.findAllByUserIdOrderByCreatedAtDesc(userId).stream()
                 .map(FittingResultResponse::from) // record의 정적 메서드 사용
                 .toList();
     }
 
 
-
     @Async
-    public void processFittingAsync(Long userId,
-                                    MultipartFile clothesImage, MultipartFile bodyImage) {
-
+    public void processFittingAsync(Long userId, MultipartFile clothesImage, MultipartFile bodyImage) {
         try {
+            ByteArrayResource bodyResource = new ByteArrayResource(bodyImage.getBytes()) {
+                @Override public String getFilename() {
+                    return bodyImage.getOriginalFilename();
+                }
+            };
+
+            ByteArrayResource clothesResource = new ByteArrayResource(clothesImage.getBytes()) {
+                @Override public String getFilename() {
+                    return clothesImage.getOriginalFilename();
+                }
+            };
+
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
-            builder.part("clothes", clothesImage.getResource())  // clothes
-                    .filename(clothesImage.getOriginalFilename())
-                    .contentType(MediaType.IMAGE_PNG);
-            builder.part("body", bodyImage.getResource())        // body
+            builder.part("body", bodyResource)
                     .filename(bodyImage.getOriginalFilename())
-                    .contentType(MediaType.IMAGE_PNG);
+                    .contentType(MediaType.parseMediaType(bodyImage.getContentType()));
+            builder.part("clothes", clothesResource)
+                    .filename(clothesImage.getOriginalFilename())
+                    .contentType(MediaType.parseMediaType(clothesImage.getContentType()));
 
             webClient.post()
                     .uri("/fitting")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .bodyValue(builder.build())
                     .retrieve()
-                    .bodyToMono(JsonNode.class) // JSON 응답 받기
-                    .subscribe(jsonNode -> {
+                    .bodyToMono(String.class)
+                    .subscribe(responseStr -> {
                         try {
-                            // image.url 필드 추출
-                            String resultImageUrl = jsonNode.path("image").path("url").asText();
+                            ObjectMapper mapper = new ObjectMapper();
+                            JsonNode root = mapper.readTree(responseStr);
+                            String imageUrl = root.path("image").path("url").asText();
 
-                            // DB 저장
                             VirtualFitting fitting = VirtualFitting.builder()
                                     .userId(userId)
-                                    .resultImageUrl(resultImageUrl)
-                                    .createdAt(LocalDateTime.now())
+                                    .resultImageUrl(imageUrl)
                                     .build();
-
                             virtualFittingRepository.save(fitting);
-                        } catch (Exception ex) {
-                            log.error("Error during fitting result handling", ex);
+                            log.info("가상 피팅 성공: {}", imageUrl);
+
+                        } catch (Exception e) {
+                            log.error("JSON 파싱 실패", e);
                         }
                     }, error -> {
-                        log.error("AI 서버 응답 에러", error);
+                        log.error("가상 피팅 요청 실패", error);
                     });
 
         } catch (Exception e) {
-            log.error("Fitting async process setup failed: {}", e.getMessage(), e);
+            log.error("파일 준비 실패", e);
+        }
+    }
+
+    public String processFitting(Long userId, MultipartFile clothesImage, MultipartFile bodyImage) {
+        try {
+            ByteArrayResource bodyResource = new ByteArrayResource(bodyImage.getBytes()) {
+                @Override public String getFilename() {
+                    return bodyImage.getOriginalFilename();
+                }
+            };
+
+            ByteArrayResource clothesResource = new ByteArrayResource(clothesImage.getBytes()) {
+                @Override public String getFilename() {
+                    return clothesImage.getOriginalFilename();
+                }
+            };
+
+            MultipartBodyBuilder builder = new MultipartBodyBuilder();
+            builder.part("body", bodyResource)
+                    .filename(bodyImage.getOriginalFilename())
+                    .contentType(MediaType.parseMediaType(bodyImage.getContentType()));
+            builder.part("clothes", clothesResource)
+                    .filename(clothesImage.getOriginalFilename())
+                    .contentType(MediaType.parseMediaType(clothesImage.getContentType()));
+
+            String result = webClient.post()
+                    .uri("/fitting")
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .bodyValue(builder.build())
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            // JSON 파싱
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(result);
+            String imageUrl = root.path("image").path("url").asText();
+
+            // DB 저장
+            VirtualFitting fitting = VirtualFitting.builder()
+                    .userId(userId)
+                    .resultImageUrl(imageUrl)
+                    .build();
+            virtualFittingRepository.save(fitting);
+
+            return imageUrl;
+
+        } catch (Exception e) {
+            log.error("가상 피팅 처리 실패", e);
+            return null;
         }
     }
 
