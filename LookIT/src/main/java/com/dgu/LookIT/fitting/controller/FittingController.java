@@ -2,7 +2,6 @@ package com.dgu.LookIT.fitting.controller;
 
 import com.dgu.LookIT.annotaion.UserId;
 import com.dgu.LookIT.fitting.dto.response.FittingResultResponse;
-import com.dgu.LookIT.fitting.service.AnalysisService;
 import com.dgu.LookIT.fitting.service.S3FileService;
 import com.dgu.LookIT.global.ResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -37,11 +36,24 @@ public class FittingController {
         return ResponseDto.ok("가상 피팅 요청이 처리 완료됐습니다.");
     }
 
+    // 동기 방식 - 가상 피팅 요청
+    @PostMapping("/api/v0/virtual-fitting/sync")
+    public ResponseDto<?> requestFittingSync(
+            @UserId Long userId,
+            @RequestParam("clothes") MultipartFile clothesImage,
+            @RequestParam("body") MultipartFile bodyImage
+    ) throws IOException {
+        s3FileService.processFitting(userId, clothesImage, bodyImage);
+        return ResponseDto.ok("가상 피팅 요청이 처리 완료됐습니다.");
+    }
+
     // 3 가상피팅 결과 반환
     @GetMapping("/api/v0/virtual-fitting/result")
     public ResponseDto<List<FittingResultResponse>> getFittingResults(@UserId Long userId) {
         List<FittingResultResponse> results = s3FileService.getFittingResults(userId);
         return ResponseDto.ok(results);
     }
+
+
 
 }
