@@ -58,4 +58,10 @@ public class AnalysisController {
         analysisService.postFaceMood(userId, request.faceMood());
         return ResponseDto.ok(request.faceMood());
     }
+
+    @GetMapping("/style-analysis/result")
+    public ResponseDto<?> getStyleAnalysisResult(@UserId Long userId) {
+        return ResponseDto.ok(analysisService.getAnalysisResult(userId));
+    }
 }
+
