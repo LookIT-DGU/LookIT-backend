@@ -53,7 +53,6 @@ public class AnalysisService {
         }
     }
 
-
     @Async
     public void processFaceAnalysisAsync(Long userId, MultipartFile faceImage) {
         try {
@@ -68,27 +67,37 @@ public class AnalysisService {
                     .bodyValue(builder.build())
                     .retrieve()
                     .bodyToMono(String.class)
+                    .doOnError(e -> {
+                        // 요청 자체가 실패한 경우 (예: 호스트 없음, 서버 다운 등)
+                        log.error("[요청 실패] 얼굴형 분석 AI 서버 연결 실패: {}", e.getMessage(), e);
+                    })
                     .subscribe(faceShapeStr -> {
+                        // 정상 응답 처리
                         if (faceShapeStr == null || faceShapeStr.isBlank()) {
-                            log.error("AI 서버에서 받은 얼굴형 응답이 비어 있음");
+                            log.error("[응답 실패] AI 서버에서 받은 얼굴형 응답이 비어 있음");
                             return;
                         }
 
                         try {
                             FaceShape faceShape = FaceShape.valueOf(faceShapeStr.toUpperCase());
                             userAnalysisCacheHelper.setFaceShape(userId, faceShape.name());
+                            log.info("얼굴형 분석 성공: {}", faceShape.name());
                         } catch (IllegalArgumentException e) {
-                            log.error("알 수 없는 얼굴형 문자열 수신: {}", faceShapeStr);
+                            log.error("[응답 파싱 실패] 알 수 없는 얼굴형 문자열 수신: {}", faceShapeStr);
                         }
-
                     }, error -> {
-                        log.error("AI 서버 얼굴형 분석 실패: {}", error.getMessage(), error);
+                        // HTTP 에러 응답 (4xx, 5xx 등)
+                        log.error("[응답 에러] 얼굴형 분석 요청 실패: {}", error.getMessage(), error);
                     });
 
         } catch (Exception e) {
-            log.error("Face analysis 요청 자체 실패: {}", e.getMessage(), e);
+            // MultipartBodyBuilder 구성 실패 등 코드 자체 예외
+            log.error("[코드 오류] 얼굴형 분석 요청 구성 중 예외 발생: {}", e.getMessage(), e);
         }
     }
+
+
+
 
     @Async
     public void processBodyAnalysisAsync(Long userId, MultipartFile bodyImage) {
