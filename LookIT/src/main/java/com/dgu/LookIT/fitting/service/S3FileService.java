@@ -67,7 +67,7 @@ public class S3FileService {
 
 
     @Async
-    public void processFittingAsync(Long userId, MultipartFile bodyImage, MultipartFile clothesImage) {
+    public void processFittingAsync(Long userId, MultipartFile clothesImage, MultipartFile bodyImage) {
         try {
             ByteArrayResource bodyResource = new ByteArrayResource(bodyImage.getBytes()) {
                 @Override public String getFilename() {
@@ -120,7 +120,7 @@ public class S3FileService {
         }
     }
 
-    public String processFitting(Long userId, MultipartFile bodyImage, MultipartFile clothesImage) {
+    public String processFitting(Long userId, MultipartFile clothesImage, MultipartFile bodyImage) {
         try {
             ByteArrayResource bodyResource = new ByteArrayResource(bodyImage.getBytes()) {
                 @Override public String getFilename() {
