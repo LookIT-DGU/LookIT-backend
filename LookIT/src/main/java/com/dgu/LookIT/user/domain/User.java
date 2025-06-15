@@ -1,6 +1,10 @@
 package com.dgu.LookIT.user.domain;
 
 import com.dgu.LookIT.auth.dto.request.SignUpRequest;
+import com.dgu.LookIT.brand.domain.Brand;
+import com.dgu.LookIT.fitting.domain.StyleAnalysis;
+import com.dgu.LookIT.fitting.domain.StyleRecommendation;
+import com.dgu.LookIT.fitting.domain.VirtualFitting;
 import com.dgu.LookIT.user.dto.request.MyInformationRequest;
 import jakarta.persistence.*;
 import lombok.*;
@@ -74,4 +78,16 @@ public class User {
         this.birthDate = request.birthday();
         this.userImage = request.image();
     }
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Brand> brands = new ArrayList<>();
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private StyleAnalysis styleAnalyses;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private StyleRecommendation styleRecommendations;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<VirtualFitting> virtualFittings = new ArrayList<>();
 }

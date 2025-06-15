@@ -71,8 +71,11 @@ public class S3FileService {
 
     @Async
     public void processFittingAsync(Long userId, MultipartFile clothesImage, MultipartFile bodyImage) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(()-> new CommonException(ErrorCode.NOT_FOUND_USER));
+
         VirtualFitting fitting = VirtualFitting.builder()
-                .userId(userId)
+                .user(user)
                 .build();
         virtualFittingRepository.save(fitting);  // 1. 먼저 PENDING 상태 저장
 
@@ -168,9 +171,10 @@ public class S3FileService {
             JsonNode root = mapper.readTree(result);
             String imageUrl = root.path("image").path("url").asText();
 
+            User user = userRepository.findById(userId).orElseThrow(()-> new CommonException(ErrorCode.NOT_FOUND_USER));
             // DB 저장
             VirtualFitting fitting = VirtualFitting.builder()
-                    .userId(userId)
+                    .user(user)
                     .resultImageUrl(imageUrl)
                     .build();
             virtualFittingRepository.save(fitting);
