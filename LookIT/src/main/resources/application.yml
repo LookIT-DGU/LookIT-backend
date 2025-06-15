@@ -10,7 +10,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost/lookit
     username: "root"
-    password: "0302"
+    password: "Lookit@0302"
 
   jpa:
     hibernate:
