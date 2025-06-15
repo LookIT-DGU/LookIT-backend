@@ -54,6 +54,12 @@ public class FittingController {
         return ResponseDto.ok(results);
     }
 
+    @DeleteMapping("/api/v0/virtual-fitting")
+    public ResponseDto<?> deleteFitting(@UserId Long userId, @RequestParam Long virutalFittingId) {
+
+        String result = s3FileService.deleteVirtualFitting(userId, virutalFittingId);
+        return ResponseDto.ok(result);
+    }
 
 
 }

@@ -3,9 +3,12 @@ package com.dgu.LookIT.fitting.service;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.dgu.LookIT.exception.CommonException;
+import com.dgu.LookIT.exception.ErrorCode;
 import com.dgu.LookIT.fitting.domain.VirtualFitting;
 import com.dgu.LookIT.fitting.dto.response.FittingResultResponse;
 import com.dgu.LookIT.fitting.repository.VirtualFittingRepository;
+import com.dgu.LookIT.user.domain.User;
 import com.dgu.LookIT.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,17 +71,17 @@ public class S3FileService {
 
     @Async
     public void processFittingAsync(Long userId, MultipartFile clothesImage, MultipartFile bodyImage) {
+        VirtualFitting fitting = VirtualFitting.builder()
+                .userId(userId)
+                .build();
+        virtualFittingRepository.save(fitting);  // 1. 먼저 PENDING 상태 저장
+
         try {
             ByteArrayResource bodyResource = new ByteArrayResource(bodyImage.getBytes()) {
-                @Override public String getFilename() {
-                    return bodyImage.getOriginalFilename();
-                }
+                @Override public String getFilename() { return bodyImage.getOriginalFilename(); }
             };
-
             ByteArrayResource clothesResource = new ByteArrayResource(clothesImage.getBytes()) {
-                @Override public String getFilename() {
-                    return clothesImage.getOriginalFilename();
-                }
+                @Override public String getFilename() { return clothesImage.getOriginalFilename(); }
             };
 
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
@@ -101,39 +104,47 @@ public class S3FileService {
                             JsonNode root = mapper.readTree(responseStr);
                             String imageUrl = root.path("image").path("url").asText();
 
-                            VirtualFitting fitting = VirtualFitting.builder()
-                                    .userId(userId)
-                                    .resultImageUrl(imageUrl)
-                                    .build();
-                            virtualFittingRepository.save(fitting);
+                            fitting.setResultImageUrl(imageUrl);
+                            virtualFittingRepository.save(fitting);  // 3. 성공 시 업데이트
                             log.info("가상 피팅 성공: {}", imageUrl);
 
                         } catch (Exception e) {
-                            log.error("JSON 파싱 실패", e);
+                            virtualFittingRepository.delete(fitting);  // 4. 파싱 실패 시 삭제
+                            log.error("JSON 파싱 실패 → 레코드 삭제", e);
                         }
                     }, error -> {
-                        log.error("가상 피팅 요청 실패", error);
+                        virtualFittingRepository.delete(fitting);  // 4. AI 서버 실패 시 삭제
+                        log.error("가상 피팅 요청 실패 → 레코드 삭제", error);
                     });
 
         } catch (Exception e) {
-            log.error("파일 준비 실패", e);
+            virtualFittingRepository.delete(fitting);  // 4. 파일 처리 실패 시 삭제
+            log.error("파일 준비 실패 → 레코드 삭제", e);
         }
     }
 
-    public String processFitting(Long userId, MultipartFile clothesImage, MultipartFile bodyImage) {
-        // 1. 먼저 DB에 레코드 생성 (임시)
-        VirtualFitting fitting = VirtualFitting.builder()
-                .userId(userId)
-                .build();
-        virtualFittingRepository.save(fitting);
+    public String deleteVirtualFitting(Long userId, Long fittingId) {
+        User user = userRepository.findById(userId).orElseThrow();
 
+        VirtualFitting virtualFitting = virtualFittingRepository.findById(fittingId)
+                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUNT_VIRTUAL_FITTING));
+
+        virtualFittingRepository.delete(virtualFitting);
+        return fittingId + "삭제되었습니다.";
+    }
+
+    public String processFitting(Long userId, MultipartFile clothesImage, MultipartFile bodyImage) {
         try {
-            // 2. AI 서버 호출
             ByteArrayResource bodyResource = new ByteArrayResource(bodyImage.getBytes()) {
-                @Override public String getFilename() { return bodyImage.getOriginalFilename(); }
+                @Override public String getFilename() {
+                    return bodyImage.getOriginalFilename();
+                }
             };
+
             ByteArrayResource clothesResource = new ByteArrayResource(clothesImage.getBytes()) {
-                @Override public String getFilename() { return clothesImage.getOriginalFilename(); }
+                @Override public String getFilename() {
+                    return clothesImage.getOriginalFilename();
+                }
             };
 
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
@@ -152,22 +163,25 @@ public class S3FileService {
                     .bodyToMono(String.class)
                     .block();
 
-            // 3. 성공 시 URL 저장
-            String imageUrl = new ObjectMapper()
-                    .readTree(result)
-                    .path("image").path("url").asText();
+            // JSON 파싱
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(result);
+            String imageUrl = root.path("image").path("url").asText();
 
-            fitting.setResultImageUrl(imageUrl);
+            // DB 저장
+            VirtualFitting fitting = VirtualFitting.builder()
+                    .userId(userId)
+                    .resultImageUrl(imageUrl)
+                    .build();
             virtualFittingRepository.save(fitting);
+
             return imageUrl;
 
         } catch (Exception e) {
-            log.error("가상 피팅 실패: DB 삭제 진행", e);
-            virtualFittingRepository.delete(fitting); // 실패 시 삭제
+            log.error("가상 피팅 처리 실패", e);
             return null;
         }
     }
-
 
 
     private ObjectMetadata getObjectMetadata(MultipartFile file) {
