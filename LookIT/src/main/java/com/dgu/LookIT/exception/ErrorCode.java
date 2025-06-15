@@ -38,6 +38,7 @@ public enum ErrorCode {
     NOT_FOUND_BODY_TYPE(40403, HttpStatus.NOT_FOUND, "사용자의 바디타입이 존재하지않습니다."),
     NOT_FOUND_FACE_ANALYSIS(40404, HttpStatus.NOT_FOUND, "사용자의 얼굴타입이 존재하지않습니다."),
     NOT_FOUND_STYLE_RECOMMENDATION(40007, HttpStatus.NOT_FOUND, "스타일팁이 존재하지않습니다."),
+    NOT_FOUNT_VIRTUAL_FITTING(40008, HttpStatus.NOT_FOUND, "가상피팅 데이터가 존재하지않습니다."),
 
     //500
     INTERNAL_SERVER_ERROR(50000, HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류입니다"),

@@ -37,7 +37,7 @@ logging:
 
 jwt:
   secret-key: ${JWT_SECRET}
-  access-token-expire-period: 36000000
+  access-token-expire-period: 1800000
   refresh-token-expire-period: 3600
 
 cloud:

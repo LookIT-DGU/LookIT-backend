@@ -3,9 +3,12 @@ package com.dgu.LookIT.fitting.service;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.dgu.LookIT.exception.CommonException;
+import com.dgu.LookIT.exception.ErrorCode;
 import com.dgu.LookIT.fitting.domain.VirtualFitting;
 import com.dgu.LookIT.fitting.dto.response.FittingResultResponse;
 import com.dgu.LookIT.fitting.repository.VirtualFittingRepository;
+import com.dgu.LookIT.user.domain.User;
 import com.dgu.LookIT.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -120,6 +123,15 @@ public class S3FileService {
         }
     }
 
+    public String deleteVirtualFitting(Long userId, Long fittingId) {
+        User user = userRepository.findById(userId).orElseThrow();
+
+        VirtualFitting virtualFitting = virtualFittingRepository.findById(fittingId)
+                .orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUNT_VIRTUAL_FITTING));
+
+        virtualFittingRepository.delete(virtualFitting);
+        return fittingId + "삭제되었습니다.";
+    }
 
     public String processFitting(Long userId, MultipartFile clothesImage, MultipartFile bodyImage) {
         try {

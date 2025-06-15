@@ -1,9 +1,12 @@
 package com.dgu.LookIT.fitting.repository;
 
+import com.dgu.LookIT.fitting.domain.StyleAnalysis;
 import com.dgu.LookIT.fitting.domain.VirtualFitting;
+import com.dgu.LookIT.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface VirtualFittingRepository extends JpaRepository<VirtualFitting, Long> {
 
@@ -11,4 +14,6 @@ public interface VirtualFittingRepository extends JpaRepository<VirtualFitting, 
     List<VirtualFitting> findAllByUserIdOrderByCreatedAtDesc(Long userId);
 
     List<VirtualFitting> findAllByUserId(Long userId);
+
+    Optional<VirtualFitting> findByUserId(Long userId);
 }
