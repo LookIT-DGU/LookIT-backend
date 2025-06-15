@@ -1,8 +1,12 @@
 package com.dgu.LookIT.fitting.domain;
 
+import com.dgu.LookIT.brand.domain.Brand;
+import com.dgu.LookIT.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "virtual_fitting")
@@ -17,8 +21,9 @@ public class VirtualFitting {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "result_image_url", columnDefinition = "TEXT")
     private String resultImageUrl;
