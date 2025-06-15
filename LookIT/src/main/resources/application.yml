@@ -29,7 +29,7 @@ spring:
   kakao:
     client_id: ${KAKAO_CLIENT_ID}
     base_url: https://dapi.kakao.com
-    redirect_uri: http://localhost:8080/api/auth/login/kakao
+    redirect_uri: https://lookit-pearl.vercel.app/auth/kakao/callback
 
 logging:
   level:
