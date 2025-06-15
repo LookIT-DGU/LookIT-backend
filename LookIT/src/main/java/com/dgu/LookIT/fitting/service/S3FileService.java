@@ -121,17 +121,19 @@ public class S3FileService {
     }
 
     public String processFitting(Long userId, MultipartFile clothesImage, MultipartFile bodyImage) {
-        try {
-            ByteArrayResource bodyResource = new ByteArrayResource(bodyImage.getBytes()) {
-                @Override public String getFilename() {
-                    return bodyImage.getOriginalFilename();
-                }
-            };
+        // 1. 먼저 DB에 레코드 생성 (임시)
+        VirtualFitting fitting = VirtualFitting.builder()
+                .userId(userId)
+                .build();
+        virtualFittingRepository.save(fitting);
 
+        try {
+            // 2. AI 서버 호출
+            ByteArrayResource bodyResource = new ByteArrayResource(bodyImage.getBytes()) {
+                @Override public String getFilename() { return bodyImage.getOriginalFilename(); }
+            };
             ByteArrayResource clothesResource = new ByteArrayResource(clothesImage.getBytes()) {
-                @Override public String getFilename() {
-                    return clothesImage.getOriginalFilename();
-                }
+                @Override public String getFilename() { return clothesImage.getOriginalFilename(); }
             };
 
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
@@ -150,25 +152,22 @@ public class S3FileService {
                     .bodyToMono(String.class)
                     .block();
 
-            // JSON 파싱
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(result);
-            String imageUrl = root.path("image").path("url").asText();
+            // 3. 성공 시 URL 저장
+            String imageUrl = new ObjectMapper()
+                    .readTree(result)
+                    .path("image").path("url").asText();
 
-            // DB 저장
-            VirtualFitting fitting = VirtualFitting.builder()
-                    .userId(userId)
-                    .resultImageUrl(imageUrl)
-                    .build();
+            fitting.setResultImageUrl(imageUrl);
             virtualFittingRepository.save(fitting);
-
             return imageUrl;
 
         } catch (Exception e) {
-            log.error("가상 피팅 처리 실패", e);
+            log.error("가상 피팅 실패: DB 삭제 진행", e);
+            virtualFittingRepository.delete(fitting); // 실패 시 삭제
             return null;
         }
     }
+
 
 
     private ObjectMetadata getObjectMetadata(MultipartFile file) {
